@@ -7,6 +7,7 @@ from marshmallow_sqlalchemy import auto_field
 class MessageSchema(marsh.SQLAlchemySchema):
     class Meta:
         model = Message
+        load_instance=True
 
     id = auto_field()
     content = auto_field(

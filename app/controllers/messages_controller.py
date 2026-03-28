@@ -1,3 +1,4 @@
+from flask import jsonify, request
 from ..models.messages import Message
 from ..schemas.messages_schema import MessageSchema
 from ..utils.response import success_reponse
@@ -12,36 +13,31 @@ def list_all_messages():
     if not msgs:
         raise NotFound("No messages on this session")
 
-    return success_reponse({
+    return jsonify(success_reponse({
         "messages": msgs_schema.dump(msgs)
-    })
+    }))
 
 def get_message(id:int):
-    msg = Message.query.get(id)
-    if not msg:
-        raise NotFound("Message id not found")
-    
+    msg = Message.query.get_or_404(id)
     new_msg = msg_schema.dump(msg)
-    return success_reponse(new_msg)
+    return jsonify(success_reponse(new_msg))
 
 def delete_message(id:int):
-    msg = Message.query.get(id)
-    if not msg:
-        raise NotFound("Message not found")
-
+    msg = Message.query.get_or_404(id)
     db.session.delete(msg)
     db.session.commit()
-    return success_reponse("Message deleted")
+    return jsonify(success_reponse("Message deleted"))
 
-def post_message(data):
+def post_message():
+    data = request.json
     msg = msg_schema.load(data)
-    print(msg)
     db.session.add(msg)
     db.session.commit()
 
-    return success_reponse("Message posted", 201)
+    return jsonify(success_reponse("Message posted", 201))
 
-def patch_message(data, id:int):
+def patch_message(id:int):
+    data = request.json
     msg = msg_schema.load(data)
     to_patch = Message.query.get(id)
     
@@ -52,6 +48,6 @@ def patch_message(data, id:int):
         setattr(to_patch, field, value)
 
     db.session.commit()
-    return success_reponse({
+    return jsonify(success_reponse({
         "message": msg_schema.dump(msg)
-    })    
+    }))
